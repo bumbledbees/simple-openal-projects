@@ -1,5 +1,5 @@
 #include <math.h>
-#include <stdint.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -32,32 +32,27 @@ int main (int argc, char* argv[]) {
     ALfloat interval = 2 * M_PI * 440.0;
     for (int i = 0; i < SAMPLE_RATE; i++) {
         float time = (float) i / (float) SAMPLE_RATE;
-        data[i] = (ALshort) (sin(time * interval) * INT16_MAX);
+        data[i] = (ALshort) (sin(time * interval) * SHRT_MAX);
     }
 
     // buffer the data
-    alBufferData(buffer[0], AL_FORMAT_MONO16, data, size, SAMPLE_RATE);
+    alBufferData(*buffer, AL_FORMAT_MONO16, data, size, SAMPLE_RATE);
     free(data);
 
     // play the audio
-    alSourcei(source[0], AL_BUFFER, buffer[0]);  // attach the buffer to the source
-    alSourcePlay(source[0]);  // play the audio from the buffer
+    alSourcei(*source, AL_BUFFER, *buffer);  // attach the buffer to the source
+    alSourcePlay(*source);  // play the audio from the buffer
 
     // wait until finished 
     ALint sourceState;
     do {
-        alGetSourcei(source[0], AL_SOURCE_STATE, &sourceState);
+        // get "source state" attribute of source
+        alGetSourcei(*source, AL_SOURCE_STATE, &sourceState);
     } while (sourceState != AL_STOPPED);
-
-    // cleanup
-    alDeleteBuffers(1, buffer);
-    alDeleteSources(1, source);
-    alcMakeContextCurrent(NULL);
-    alcDestroyContext(context);
-    alcCloseDevice(device);
 
     return 0;
 }
+
 
 /* minimal.c
  *
@@ -68,5 +63,6 @@ int main (int argc, char* argv[]) {
  * minimally functional demo of what you need to do to make a sound.
  *
  * build & run with:
- * gcc minimal.c -o minimal -lm -lopenal; ./minimal
+ * gcc minimal.c -o minimal -lm -lopenal
+ * ./minimal
  */

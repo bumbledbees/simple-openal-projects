@@ -8,10 +8,5 @@
 
 int printAlError(ALenum error, const char* context);
 int printAlcError(ALCenum error, const char* context);
-
-
-/* errors.h
- *
- * since the helper functions defined in errors.c are pretty useful, i figured
- * i'd include a header for them so they can be used elsewhere.
- */
+int printErrorMessage(const char* message, const char* context,
+                      const char* details);

@@ -4,7 +4,16 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 
+#include "errors.h"
 
+
+/**
+ * A helper function for printing error messages.
+ * @param message The type of error that occurred.
+ * @param context What was being done when the error occurred.
+ * @param details Additional details about the error that occurred.
+ * @return The number of characters printed to stderr.
+ */
 int printErrorMessage(const char* message, const char* context,
                       const char* details) {
     if (message == NULL) {
@@ -26,6 +35,11 @@ int printErrorMessage(const char* message, const char* context,
 }
 
 
+/**
+ * A helper function for printing OpenAL error messages.
+ * @param error The error code as returned by alGetError()
+ * @param context What was being done when the error occurred.
+ */
 int printAlError(ALenum error, const char* context) {
     char errorText[64];
 
@@ -55,6 +69,11 @@ int printAlError(ALenum error, const char* context) {
 }
 
 
+/**
+ * A helper function for printing OpenAL context error messages.
+ * @param error The error code as returned by alcGetError()
+ * @param context What was being done when the error occurred.
+ */
 int printAlcError(ALCenum error, const char* context) {
     char errorText[64];
 
@@ -84,102 +103,11 @@ int printAlcError(ALCenum error, const char* context) {
 }
 
 
-int main (int argc, char* argv[]) {
-    ALuint buffer[1];
-    ALCcontext* context;
-    ALCdevice* device;
-    ALenum error;
-    ALuint source[1];
-
-    // this opens the device normally:
-    device = alcOpenDevice(NULL);
-
-    // doing this instead results in device being equal to NULL:
-    // device = alcOpenDevice("asdfghjkl");
-
-    if (device == NULL) {
-        fprintf(stderr, "Error opening output device!\n");
-        return 1;
-    }
-
-    // doing this before creating the context results in ALC_INVALID_DEVICE:
-    // alcCloseDevice(device); device = NULL;
-
-    // this creates the context normally:
-    context = alcCreateContext(device, NULL);
-
-    if (context == NULL) {
-        printAlcError(alcGetError(device), "creating ALC context");
-        alcCloseDevice(device);
-        return 1;
-    }
-
-    // doing this results in ALC_INVALID_CONTEXT on device NULL:
-    // alcDestroyContext(context);
-
-    if (!alcMakeContextCurrent(context)) {
-        printAlcError(alcGetError(NULL), "making ALC context current");
-        printAlcError(alcGetError(device), "making ALC context current");
-        alcDestroyContext(context);
-        alcCloseDevice(device);
-        return 1;
-    }
-
-    // doing this before generating sources results in AL_INVALID_OPERATION:
-    // alcMakeContextCurrent(NULL);
-
-    // this creates the source normally:
-    alGenSources(1, source);
-
-    // doing this instead results in AL_INVALID_VALUE:
-    // alGenSources(-1, source);
-
-    if ((error = alGetError()) != AL_NO_ERROR) {
-        printAlError(error, "creating audio sources");
-        alcMakeContextCurrent(NULL);
-        alcDestroyContext(context);
-        alcCloseDevice(device);
-        return 1;
-    }
-    
-    // doing this before generating buffers results in AL_INVALID_OPERATION:
-    // alcMakeContextCurrent(NULL);
-
-    // doing this generates buffers normally:
-    alGenBuffers(1, buffer);
-
-    // doing this instead results in AL_INVALID_VALUE:
-    // alGenBuffers(-1, buffer);
-
-    if ((error = alGetError()) != AL_NO_ERROR) {
-        printAlError(error, "creating audio buffers");
-        alcMakeContextCurrent(NULL);
-        alcDestroyContext(context);
-        alcCloseDevice(device);
-        return 1;
-    }
-
-    // you'd do your audio stuff here
-
-    // cleanup:
-    alDeleteBuffers(1, buffer);
-    alDeleteSources(1, source);
-    alcMakeContextCurrent(NULL);
-    alcDestroyContext(context);
-    alcCloseDevice(device);
-
-    printf("The program finished without errors! :)\n");
-    return 0;
-}
-
-
 /* errors.c
  *
- * a demonstration of how to check for errors while writing OpenAL code, along
- * with some sample definitions of functions to help display details about the
- * errors encountered. try commenting / uncommenting sections of code to mess
- * around with different error states.
+ * a collection of helper functions that can help display details about the
+ * errors encountered during runtime of an OpenAL program.
  *
- * build & run with:
- * gcc errors.c -o errors -lopenal; ./errors
+ * build with:
+ * gcc -c errors.c
  */

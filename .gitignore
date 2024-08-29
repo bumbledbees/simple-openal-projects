@@ -1,4 +1,5 @@
 build/
+*.d
 *.o
 *.swp
 
